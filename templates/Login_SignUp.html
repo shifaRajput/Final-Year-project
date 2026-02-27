@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Login Signup</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='Login_SignUp.css') }}">
+</head>
+<body>
+
+<div class="scene">
+  <div class="container" id="container">
+
+    <form class="form-container sign-up" id="signupForm">
+      <h2>Create Account</h2>
+      <input type="text" name="name" placeholder="Full Name" required>
+      <input type="email" name="email" placeholder="Email" required>
+      <div class="password-wrapper">
+        <input type="password" name="password" id="password" placeholder="Password" required>
+        <span class="toggle-eye" data-target="password">👁</span>
+      </div>
+      <div class="password-wrapper">
+        <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+        <span class="toggle-eye" data-target="confirmPassword">👁</span>
+        <span id="successTick" class="tick">✓</span>
+      </div>
+      <small id="signupMsg" class="error-text"></small>
+      <button id="createAccount" type="submit" disabled>Sign Up</button>
+    </form>
+
+    <form class="form-container sign-in" id="loginForm">
+      <h2>Login</h2>
+      <input type="email" name="email" placeholder="Email" required>
+      <input type="password" name="password" placeholder="Password" required>
+      <p class="forgot-link" id="forgotBtn" style="cursor:pointer">Forgot password?</p>
+      <small id="loginMsg" class="error-text"></small>
+      <button type="submit">Login</button>
+    </form>
+
+    <div class="overlay-container">
+      <div class="overlay">
+        <div class="overlay-panel overlay-left">
+          <h2>Welcome Back!</h2>
+          <p>Already have an account?</p>
+          <button id="signIn">Login</button>
+        </div>
+        <div class="overlay-panel overlay-right">
+          <h2>Hello Friend!</h2>
+          <p>Don't have an account?</p>
+          <button id="signUp">Sign Up</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="forgot-modal" id="forgotModal">
+    <div class="forgot-box">
+      <h3>Reset Password</h3>
+      <input type="email" id="forgotEmail" placeholder="Enter your email">
+      <button id="sendForgot">Get Password</button>
+      <button id="closeForgot" style="margin-top:10px; background:#666;">Close</button>
+      <small id="forgotMsg" class="error-text"></small>
+    </div>
+  </div>
+</div>
+
+<script>
+const container = document.getElementById("container");
+const password = document.getElementById("password");
+const confirmPassword = document.getElementById("confirmPassword");
+const tick = document.getElementById("successTick");
+const createBtn = document.getElementById("createAccount");
+
+// 1. Sliding UI Logic
+document.getElementById("signUp").onclick = () => container.classList.add("active");
+document.getElementById("signIn").onclick = () => container.classList.remove("active");
+
+// 2. Password Match Logic
+function validatePasswords(){
+  const msg = document.getElementById("signupMsg");
+  if(confirmPassword.value === "") {
+    msg.textContent = "";
+    tick.classList.remove("show");
+    createBtn.disabled = true;
+    return;
+  }
+  if(password.value !== confirmPassword.value){
+    msg.textContent = "Passwords do not match";
+    msg.style.color = "#ff4d4d";
+    tick.classList.remove("show");
+    createBtn.disabled = true;
+  } else {
+    msg.textContent = "Passwords match!";
+    msg.style.color = "#00c851";
+    tick.classList.add("show");
+    createBtn.disabled = false;
+  }
+}
+password.addEventListener("input", validatePasswords);
+confirmPassword.addEventListener("input", validatePasswords);
+
+// 3. Eye Toggle
+document.querySelectorAll(".toggle-eye").forEach(icon => {
+  icon.addEventListener("click", () => {
+    const input = document.getElementById(icon.dataset.target);
+    input.type = input.type === "password" ? "text" : "password";
+    icon.textContent = input.type === "password" ? "👁" : "🙈";
+  });
+});
+
+// 4. Submit Logic
+async function handleSubmission(id, url, msgId) {
+  const form = document.getElementById(id);
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById(msgId);
+    const formData = new FormData(form);
+    
+    try {
+      const response = await fetch(url, { method: "POST", body: formData });
+      const data = await response.json();
+      
+      msg.textContent = data.message || (data.success ? "Success!" : "Error");
+      msg.style.color = data.success ? "#00c851" : "#ff4d4d";
+      
+      if(data.success){
+    if(data.redirect){
+        window.location.href = data.redirect;
+        return;
+    }
+    form.reset();
+}
+
+    } catch (err) {
+      msg.textContent = "Could not connect to server.";
+    }
+  };
+}
+
+handleSubmission("signupForm", "/signup", "signupMsg");
+handleSubmission("loginForm", "/login", "loginMsg");
+
+// 5. Forgot Password Modal
+const modal = document.getElementById("forgotModal");
+document.getElementById("forgotBtn").onclick = () => modal.classList.add("active");
+document.getElementById("closeForgot").onclick = () => {
+  modal.classList.remove("active");
+  document.getElementById("forgotMsg").textContent = "";
+};
+
+document.getElementById("sendForgot").onclick = async () => {
+  const email = document.getElementById("forgotEmail").value;
+  const msg = document.getElementById("forgotMsg");
+  const response = await fetch("/forgot", { 
+    method: "POST", 
+    body: new URLSearchParams({ email }) 
+  });
+  const data = await response.json();
+  msg.textContent = data.message;
+  msg.style.color = data.success ? "#00c851" : "#ff4d4d";
+};
+</script>
+</body>
+</html>

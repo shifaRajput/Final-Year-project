@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2MB Computer - Smartphone</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='category_discount.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+<header class="main-header">
+    <button class="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
+    <br>
+    <h1>Computers</h1>
+    <p>Browse our collection of quality refurbished Computers</p>
+</header>
+
+<nav class="sticky-nav">
+    <div class="search-container">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="2MB Computer is here to help you">
+    </div>
+    
+    <div class="filter-container">
+    <button class="filter-btn" id="filterBtn">
+        <i class="fas fa-filter"></i> Filter
+    </button>
+
+        <div class="filter-dropdown" id="filterDropdown">
+            <!-- PRICE -->
+    <div class="filter-group">
+        <h3>Price</h3>
+        <div class="price-inputs">
+            <input type="number" id="minPrice" placeholder="Min ₹">
+            <input type="number" id="maxPrice" placeholder="Max ₹">
+        </div>
+    </div>
+        
+    <!-- BRAND -->
+    <div class="filter-group">
+        <h3>Brand</h3>
+        <div class="brand-list">
+            {% for brand in brands %}
+                <label>
+                    <input type="checkbox" class="brand-filter" value="{{ brand }}">
+                    {{ brand }}
+                </label>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <button class="apply-btn" id="applyFilters">Apply Filters</button>
+        </div>
+</div>
+</nav>
+<main class="product-grid" id="productGrid">
+
+{% for product in products %}
+    <div class="product-card"
+         data-brand="{{ product.brand }}"
+         data-price="{{ product.real_price }}">
+
+        <i class="far fa-heart heart-icon"></i>
+
+<div class="slider-container">
+    {% for media in product.media %}
+        {% if media.filetype == 'image' %}
+            <img src="{{ url_for('static', filename='uploads/' + media.filename) }}"
+                 alt="{{ product.name }}">
+        {% elif media.filetype == 'video' %}
+            <video controls>
+                <source src="{{ url_for('static', filename='uploads/' + media.filename) }}" type="video/mp4">
+            </video>
+        {% endif %}
+    {% endfor %}
+</div>
+       <a href="{{ url_for('product_detail', product_id=product.id) }}">
+        <div class="info">
+            <span class="tag">{{ product.condition }}</span>
+
+            <h3>{{ product.name }}</h3>
+
+            <div class="rating-box">
+                <i class="fas fa-star"></i>
+                <span>{{ product.rating }} ({{ product.review_count }})</span>
+            </div>
+
+            <p class="price">
+            ₹{{ product.real_price }}
+            {% if product.discount_enabled %}
+                <span class="old-price">₹{{ product.old_price }}</span>
+            {% endif %}
+        </p>
+
+            <br>
+            
+            <button class="button add-to-cart-btn">
+                <span>Add to cart</span>
+                <div class="cart">
+                    <svg viewBox="0 0 36 26">
+                        <polyline points="1 2.5 6 2.5 10 18.5 25.5 18.5 28.5 7.5 7.5 7.5"></polyline>
+                        <polyline points="15 13.5 17 15.5 22 10.5"></polyline>
+                    </svg>
+                </div>
+            </button>
+            
+        </div>
+       </a> 
+    </div>
+{% endfor %}
+
+
+</main>
+
+<script src="{{ url_for('static', filename='category_discount.js') }}"></script>
+</body>
+</html>
