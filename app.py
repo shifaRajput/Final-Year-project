@@ -398,8 +398,36 @@ def discount():
         brands=brands
     )
 1
+@app.route('/search')
+def search():
+    query = request.args.get('q', '').strip().lower()
+    if not query:
+        return jsonify([])
+
+    results = Product.query.filter(
+        db.or_(
+            Product.name.ilike(f'%{query}%'),
+            Product.brand.ilike(f'%{query}%'),
+            Product.device_type.ilike(f'%{query}%')
+        )
+    ).limit(8).all()
+
+    data = []
+    for p in results:
+        image = next((m.filename for m in p.media if m.filetype == 'image'), None)
+        data.append({
+            'id': p.id,
+            'name': p.name,
+            'brand': p.brand,
+            'real_price': p.real_price,
+            'device_type': p.device_type,
+            'image': image
+        })
+
+    return jsonify(data)
 # -------------------------
 # Run Server
 # -------------------------
 if __name__ == "__main__":
+
     app.run(debug=True)
