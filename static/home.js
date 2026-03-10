@@ -162,4 +162,57 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+<script>
+  const input = document.getElementById('searchInput');
+  const resultsBox = document.getElementById('searchResults');
+  let debounceTimer;
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const query = input.value.trim();
+
+    if (!query) {
+      resultsBox.style.display = 'none';
+      return;
+    }
+
+    debounceTimer = setTimeout(async () => {
+      const res = await fetch(`/search?q=${encodeURIComponent(query)}`);
+      const products = await res.json();
+
+      if (products.length === 0) {
+        resultsBox.innerHTML = '<div style="padding:12px; color:#888;">No results found</div>';
+      } else {
+        resultsBox.innerHTML = products.map(p => `
+          <a href="/product/${p.id}" style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            text-decoration: none;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+          " onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='white'">
+            ${p.image
+              ? `<img src="/static/uploads/${p.image}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">`
+              : `<div style="width:40px;height:40px;background:#eee;border-radius:6px;"></div>`
+            }
+            <div>
+              <div style="font-weight:600;">${p.name}</div>
+              <div style="font-size:12px;color:#888;">${p.brand} · ${p.device_type} · $${p.real_price}</div>
+            </div>
+          </a>
+        `).join('');
+      }
+
+      resultsBox.style.display = 'block';
+    }, 300); // 300ms debounce
+  });
+
+  // Hide results when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!input.contains(e.target) && !resultsBox.contains(e.target)) {
+      resultsBox.style.display = 'none';
+    }
+  });
 
